@@ -1,5 +1,6 @@
 from hsbcpdfreader import HSBCPdfReader
+from hsbccreditcardpdfreader import HSBCCreditCardPdfReader
 
-hpr = HSBCPdfReader('/Users/j.waterschoot/Downloads/statements.pdf')
+hpr = HSBCCreditCardPdfReader('/Users/j.waterschoot/Downloads/Statement-3.pdf')
 df = hpr.get_dataframe()
 print(df)
