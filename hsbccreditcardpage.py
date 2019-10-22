@@ -1,16 +1,10 @@
 import pandas as pd
 
-class HSBCCreditCardPage:
-    MARGIN = 15
+from hsbcpage import HSBCPage
 
-    def __init__(self, layout):
-        self._objs = layout._objs
-        self._min_y_val = self._get_min_y_val()
-        self._max_y_val = self._get_max_y_val()
-        self._lines = self.get_data_lines()
-        self._table = self.get_data_table()
-        self._dataframe = self.get_dataframe()
-        
+
+class HSBCCreditCardPage(HSBCPage):
+    
     def _get_info_header_obj(self):
         info_header = "Your Transaction Details".replace(" ", "")
         for obj in self.objs:
@@ -31,13 +25,7 @@ class HSBCCreditCardPage:
                 pass
         return None
 
-    def _get_min_y_val(self):
-        footer = self._get_info_footer_obj()
-        return footer.y0 if footer else 0
-        
-    def _get_max_y_val(self):
-        header = self._get_info_header_obj()
-        return header.y0 - self.MARGIN if header else 0
+    
     
     def _get_amount_margins(self):
         find_text = 'Amount'
