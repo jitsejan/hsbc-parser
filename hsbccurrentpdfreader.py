@@ -1,26 +1,34 @@
-from abc import ABCMeta, abstractmethod
-from io import BytesIO
 import pandas as pd
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.converter import TextConverter, PDFPageAggregator
-from pdfminer.layout import LAParams, LTTextBoxHorizontal, LTTextLineHorizontal, LTLine
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfparser import PDFParser
-
 
 from hsbcpage import HSBCPage
-from hsbccreditcardpage import HSBCCreditCardPage
 
-
-class HSBCPdfReader(metaclass=ABCMeta):
+class HSBCPdfReader:
     
     def __init__(self, filename):
         self._filename = filename
         self._doc = self._get_doc()
         self._layouts = self._get_layouts()
-        self._is_creditcard = self._is_creditcard_statement()
-
+    
+    def get_dataframe(self):
+        df_list = []
+        for layout in self.layouts:
+            page = HSBCPage(layout)
+            df_list.append(page.dataframe)
+        df = pd.concat(df_list)
+        df['date'] = df['date'].ffill()
+        df.dropna(subset=['payment_description', 'date'], inplace=True)
+        df['paid_in'] = df['paid_in'].str.replace(',', '').astype('float') 
+        df['paid_out'] = df['paid_out'].str.replace(',', '').astype('float')
+        df['balance'] = df['balance'].str.replace(',', '').astype('float')
+        df = df.drop(['y'], axis=1)
+        df['amount'] = df['paid_in'].fillna(df['paid_out']*-1)
+        df['amount'] = df['amount'].bfill()
+        df = df[~df['payment_description'].isin(['BALANCE CARRIED FORWARD', 'BALANCE BROUGHT FORWARD', '.'])]
+        odf = df.groupby(['date', 'amount'])['payment_description'].agg(lambda col: ' '.join(col)).to_frame()
+        odf = odf.reset_index()
+        odf['date'] = pd.to_datetime(odf['date'])
+        return odf.sort_values('date')
+        
     def _get_doc(self):
         cstr = BytesIO()
         with open(self.filename, 'rb') as fp:
@@ -42,17 +50,6 @@ class HSBCPdfReader(metaclass=ABCMeta):
 
         return layouts
     
-    def _is_creditcard_statement(self):
-        """ Dirty check for creditcard statement """
-        for obj in self.layouts[0]._objs:
-            try:
-                if 'Minimum payments'.replace(' ', '') == obj.get_text().replace(' ', '').strip():
-                    return True
-            except:
-                pass
-        return False
-        
-
     @property
     def doc(self):
         return self._doc

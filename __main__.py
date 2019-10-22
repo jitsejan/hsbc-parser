@@ -1,5 +1,4 @@
 from hsbcpdfreader import HSBCPdfReader
-from hsbccreditcardpdfreader import HSBCCreditCardPdfReader
 
 import argparse
 import os
@@ -21,9 +20,9 @@ def _get_args():
 def main():
     args = _get_args()
     if os.path.isfile(args.statement):
-        hpr = HSBCCreditCardPdfReader(args.statement)
-        df = hpr.get_dataframe()  
-        print(df)
+        hpr = HSBCPdfReader(args.statement)
+        # df = hpr.get_dataframe()  
+        # print(df)
     
 
 if __name__ == "__main__":
