@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class HSBCPage(metaclass=ABCMeta):
     MARGIN = 15
 
@@ -20,6 +21,10 @@ class HSBCPage(metaclass=ABCMeta):
         """ Get top limit """
         header = self._get_info_header_obj()
         return header.y0 - self.MARGIN if header else 0
+
+    @abstractmethod
+    def clean_frame(self):
+        pass
 
     @abstractmethod
     def _get_info_header_obj(self):

@@ -4,7 +4,29 @@ from hsbcpage import HSBCPage
 
 
 class HSBCCreditCardPage(HSBCPage):
-    
+
+    def clean_frame(self, df):
+        df.dropna(subset=['details', 'date'], inplace=True)
+        df['amount'] = df['amount'].ffill()
+        df['amount'] = df['amount'].apply(self._get_amount)
+        df = df.drop(['y'], axis=1)
+        df['date'] = pd.to_datetime(df['date'])
+        odf = df.groupby(['date', 'amount'])['details'].agg(lambda col: ' '.join(col)).to_frame()
+        odf = odf.reset_index()
+        odf['date'] = pd.to_datetime(odf['date'])
+        return odf.sort_values('date')
+
+    def _get_amount(self, field):
+        if isinstance(field, float):
+            return float(field)*-1
+        elif field.endswith('CR'):
+            field = field.strip('CR')
+            field = field.replace(',', '')
+            return float(field)
+        else:
+            field = field.replace(',', '')
+            return float(field)*-1
+
     def _get_info_header_obj(self):
         info_header = "Your Transaction Details".replace(" ", "")
         for obj in self.objs:
