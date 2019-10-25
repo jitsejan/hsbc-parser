@@ -11,11 +11,10 @@ class HSBCCurrentPage(HSBCPage):
         df.dropna(subset=['payment_description', 'date'], inplace=True)
         df['paid_in'] = df['paid_in'].str.replace(',', '').astype('float')
         df['paid_out'] = df['paid_out'].str.replace(',', '').astype('float')
-        df['balance'] = df['balance'].str.replace(',', '').astype('float')
-        df = df.drop(['y'], axis=1)
+        df = df[~df['payment_description'].str.strip().isin(['BALANCE CARRIED FORWARD', 'BALANCE BROUGHT FORWARD', '.'])]
+        df = df.drop(['y', 'balance'], axis=1)
         df['amount'] = df['paid_in'].fillna(df['paid_out'] * -1)
         df['amount'] = df['amount'].bfill()
-        df = df[~df['payment_description'].isin(['BALANCE CARRIED FORWARD', 'BALANCE BROUGHT FORWARD', '.'])]
         odf = df.groupby(['date', 'amount'])['payment_description'].agg(lambda col: ' '.join(col)).to_frame()
         odf = odf.reset_index()
         odf['date'] = pd.to_datetime(odf['date'])

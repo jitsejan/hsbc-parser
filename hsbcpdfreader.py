@@ -62,7 +62,6 @@ class HSBCPdfReader(metaclass=ABCMeta):
             page = Page(layout)
             df_list.append(page.dataframe)
         df = pd.concat(df_list)
-        print(df)
         return page.clean_frame(df)
 
     @property
